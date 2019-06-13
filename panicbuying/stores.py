@@ -24,11 +24,9 @@ class Xiaomi:
             mark = '/'
         except:
             mark = '\\'
-        exec_path = os.path.abspath(__file__).replace('stores.py', 'drivers%s%s' % (mark, kwargs['driver']))
-        options = webdriver.ChromeOptions()
-        options.add_argument('start-maximized')
-        self._brower = webdriver.Chrome(exec_path, options=options)
-        self._brower.get('https://www.mi.com')
+        self._exec_path = os.path.abspath(__file__).replace('stores.py', 'drivers%s%s' % (mark, kwargs['driver']))
+        self._options = webdriver.ChromeOptions()
+        self._options.add_argument('start-maximized')
 
     def _login(self):
         # 登录
@@ -94,6 +92,8 @@ class Xiaomi:
             print('抢购失败!')
 
     def start(self):
+        self._brower = webdriver.Chrome(self._exec_path, options=self._options)
+        self._brower.get('https://www.mi.com')
         self._login()
         self._choice_goods()
         self._start_panic()
