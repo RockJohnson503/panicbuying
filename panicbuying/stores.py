@@ -4,7 +4,7 @@
 File: chrome.py
 Author: Rock Johnson
 """
-import os
+import os, time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -19,7 +19,12 @@ class Xiaomi:
         self._goods_name = kwargs['goods_name']
         self._nth = kwargs['nth']
 
-        exec_path = os.path.abspath(__file__).replace('stores.py', 'drivers\%s' % kwargs['driver'])
+        try:
+            os.uname()
+            mark = '/'
+        except:
+            mark = '\\'
+        exec_path = os.path.abspath(__file__).replace('stores.py', 'drivers%s%s' % (mark, kwargs['driver']))
         options = webdriver.ChromeOptions()
         options.add_argument('start-maximized')
         self._brower = webdriver.Chrome(exec_path, options=options)
@@ -32,13 +37,14 @@ class Xiaomi:
             index_login_btn.click()  # 点击登录按钮
 
         agree_modal = wait(self._brower, 5, '#J_agreeModal')
+        time.sleep(1)
         if agree_modal and agree_modal.is_displayed():
             primary_btn = self._brower.find_element_by_css_selector('.btn-primary.J_sure')
             primary_btn.click() # 点击同意按钮
 
         # 输入账号
-        account_input = self._brower.find_element_by_css_selector('#username')
-        password_input = self._brower.find_element_by_css_selector('#pwd')
+        account_input = wait(self._brower, 10, '#username')
+        password_input = wait(self._brower, 10, '#pwd')
 
         account_input.send_keys(self._account)
         password_input.send_keys(self._password)
