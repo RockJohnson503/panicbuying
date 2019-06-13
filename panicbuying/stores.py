@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-class Xiaomi:
+class Stores:
     def __init__(self, **kwargs):
         self._account = kwargs['account']
         self._password = kwargs['password']
@@ -27,6 +27,34 @@ class Xiaomi:
         self._exec_path = os.path.abspath(__file__).replace('stores.py', 'drivers%s%s' % (mark, kwargs['driver']))
         self._options = webdriver.ChromeOptions()
         self._options.add_argument('start-maximized')
+
+    def _login(self):
+        # 登录
+        pass
+
+    def _choice_goods(self):
+        # 选择物品
+        pass
+
+    def _start_panic(self):
+        # 开始抢购
+        pass
+
+    def start(self):
+        self._brower = webdriver.Chrome(self._exec_path, options=self._options)
+        self._brower.get(self._url)
+        self._login()
+        self._choice_goods()
+        self._start_panic()
+
+    def close(self):
+        self._brower.quit()
+
+
+class Xiaomi(Stores):
+    def __init__(self, **kwargs):
+        Stores.__init__(self, **kwargs)
+        self._url = 'https://www.mi.com'
 
     def _login(self):
         # 登录
@@ -90,16 +118,6 @@ class Xiaomi:
             print('抢购成功!')
         else:
             print('抢购失败!')
-
-    def start(self):
-        self._brower = webdriver.Chrome(self._exec_path, options=self._options)
-        self._brower.get('https://www.mi.com')
-        self._login()
-        self._choice_goods()
-        self._start_panic()
-
-    def close(self):
-        self._brower.quit()
 
 
 def wait(driver, time, css):
