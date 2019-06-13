@@ -12,7 +12,7 @@ class Panic:
         if kwargs['store'] == '小米':
             self._store = Xiaomi(**kwargs)
         else:
-            raise KeyError('暂不支持抢购 %s 商城' % kwargs['store'])
+            raise KeyError('暂不支持%s商城的抢购' % kwargs['store'])
 
     def start(self):
         self._store.start()
