@@ -17,7 +17,8 @@ class Stores:
         self._account = kwargs['account']
         self._password = kwargs['password']
         self._goods_name = kwargs['goods_name']
-        self._nth = kwargs['nth']
+        self._goods_nth = kwargs['goods_nth']
+        self._addr_nth = kwargs['addr_nth']
 
         try:
             os.uname()
@@ -86,7 +87,7 @@ class Xiaomi(Stores):
         search_input.send_keys(self._goods_name)
         search_input.send_keys(Keys.ENTER)
 
-        goods_item = wait(self._brower, 10, '.goods-list-box .goods-item:nth-child(%d)' % self._nth)
+        goods_item = wait(self._brower, 10, '.goods-list-box .goods-item:nth-child(%d)' % self._goods_nth)
         if goods_item:
             goods_item.click()
         buy_btn = wait(self._brower, 10, '#J_headNav .btn-primary')
@@ -109,13 +110,22 @@ class Xiaomi(Stores):
                     break
                 elif flag == 1:
                     print('无法点击按钮')
-                    queue_modal = self._brower.find_element_by_css_selector('#J_bigtapQueue')
-                    if queue_modal.is_displayed():
-                        break
         print('正在排队, 请等待结果')
         ok = wait(self._brower, 200, '#J_goodsBox')
         if ok:
-            print('抢购成功!')
+            shop_btn = wait(self._brower, 10, '.actions.J_actBox a.btn-primary')
+            if shop_btn:
+                shop_btn.click()
+            pay_btn = wait(self._brower, 10, '#J_goCheckout')
+            if pay_btn:
+                pay_btn.click()
+            address = wait(self._brower, 10, '#J_addressList div:nth-child(%d)' % self._addr_nth)
+            if address:
+                address.click()
+            order_btn = wait(self._brower, 10, '#J_checkoutToPay')
+            if order_btn:
+                order_btn.click()
+            print('抢购成功,请尽快付款!')
         else:
             print('抢购失败!')
 
