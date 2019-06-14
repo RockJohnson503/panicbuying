@@ -11,7 +11,7 @@ Panicbuying是商城物品抢购脚本,目前支持小米商城.
 
 2. 安装依赖包
 
-.. code-block:: cmd
+::
 
     D:\Downloads\panicbuying-master> pip install -r requirements.txt
 
@@ -32,12 +32,12 @@ Panicbuying是商城物品抢购脚本,目前支持小米商城.
 .. code-block:: python
 
     >>> store = '小米' # 抢购的商城
-    目前只支持小米,所以这里只需要填:小米
+    '目前只支持小米,所以这里只需要填:小米'
     >>> driver = 'chromedriver' # 启动浏览器的应用程序
-    必须安装google chrome浏览器,根据chrome的版本号及系统的类型在下面链接里下载对应的压缩包
-    http://npm.taobao.org/mirrors/chromedriver/
-    下载好后将压缩包解压,然后把解压好的应用程序放在panicbuying/drivers文件下,然后应用程
-    序的名字则是driver的参数值.
+    '必须安装google chrome浏览器,根据chrome的版本号及系统的类型在下面链接里下载对应的压缩包'
+    'http://npm.taobao.org/mirrors/chromedriver/'
+    '下载好后将压缩包解压,然后把解压好的应用程序放在panicbuying/drivers文件下,然后应用程'
+    '序的名字则是driver的参数值.'
     >>> account = '用户名' # 抢购小米商城则输入你的小米账号
 
     >>> password = '密码' # 对应账号的密码
@@ -45,5 +45,5 @@ Panicbuying是商城物品抢购脚本,目前支持小米商城.
     >>> goods_name = '小米手环' # 需要抢购的商品名称
 
     >>> googs_nth = 1 # 商品在搜索页面的第几个选项上,从1开始
-    在小米官网右上角的搜索框输入goods_name的值,然后看你要抢购的商品是第几个
+    '在小米官网右上角的搜索框输入goods_name的值,然后看你要抢购的商品是第几个'
     >>> addr_nth = 1 # 如果只有一个收货地址则填1,如果有多个请根据需要选择第几个收货地址
