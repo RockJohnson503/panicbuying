@@ -90,10 +90,13 @@ class Xiaomi(Stores):
         goods_item = wait(self._brower, 10, '.goods-list-box .goods-item:nth-child(%d)' % self._goods_nth)
         if goods_item:
             goods_item.click()
-        buy_btn = wait(self._brower, 10, '#J_headNav .btn-primary')
+
+        windows = self._brower.window_handles
+        self._brower.switch_to.window(windows[1])
+
+        buy_btn = wait(self._brower, 10, '#J_headNav .right .btn-primary')
         if buy_btn:
             buy_btn.click()
-
         wait(self._brower, 10, '#J_buyBtnBox li:nth-child(1)')
 
     def _start_panic(self):
