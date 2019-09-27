@@ -59,14 +59,14 @@ class Xiaomi(Stores):
 
     def _login(self):
         # 登录
-        index_login_btn = wait(self._brower, 10, '#J_userInfo a.link:nth-child(1)')
+        index_login_btn = wait(self._brower, 10, '#J_siteUserInfo a.link:nth-child(1)')
         if index_login_btn:
             index_login_btn.click()  # 点击登录按钮
 
-        agree_modal = wait(self._brower, 5, '#J_agreeModal')
+        agree_modal = wait(self._brower, 5, '.J_siteAgreementDialog')
         time.sleep(1)
         if agree_modal and agree_modal.is_displayed():
-            primary_btn = self._brower.find_element_by_css_selector('.btn-primary.J_sure')
+            primary_btn = self._brower.find_element_by_css_selector('.btn-primary')
             primary_btn.click() # 点击同意按钮
 
         # 输入账号
@@ -77,7 +77,7 @@ class Xiaomi(Stores):
         password_input.send_keys(self._password)
         password_input.send_keys(Keys.ENTER)
 
-        ok = wait(self._brower, 10, '#J_userInfo span.user')
+        ok = wait(self._brower, 10, '#J_siteUserInfo span.user')
         if not ok:
             self._login()
 
