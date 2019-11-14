@@ -16,7 +16,7 @@ class Stores:
     def __init__(self, **kwargs):
         self._url = kwargs['url']
         self._addr_nth = kwargs.get('addr_nth') or 1
-        self._browser = Browser().get(kwargs['browser'], kwargs['version'])
+        self._browser = Browser().get(kwargs.get('browser'), kwargs.get('version'))
 
     # 登录
     def _login(self):
