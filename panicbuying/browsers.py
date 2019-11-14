@@ -62,8 +62,6 @@ class Browser:
                     key = winreg.OpenKey(k, i, 0, winreg.KEY_ALL_ACCESS)
                 except FileNotFoundError:
                     continue
-                except PermissionError:
-                    raise Exception('请使用管理员方式打开')
                 for j in range(winreg.QueryInfoKey(key)[0] - 1):
                     try:
                         key_path = i + '\\' + winreg.EnumKey(key, j)
