@@ -47,7 +47,6 @@ class Xiaomi(Stores):
 
     # 登录
     def _login(self):
-        time.sleep(1)
         self._browser.execute_script('var q=document.documentElement.scrollTop=0')
         wait(self._browser, 10, '#J_userInfo a.link:nth-child(1)', '登录').click()
         wait(self._browser, 5, '#J_agreeModal .btn-primary', '同意按钮').click()
