@@ -27,7 +27,7 @@ class Browser:
 
     def get(self):
         programs = self._get_program()
-        for k, v in self._browsers:
+        for k, v in self._browsers.items():
             if b:=self._find(programs, k):
                 browser = v(b)
                 try:
