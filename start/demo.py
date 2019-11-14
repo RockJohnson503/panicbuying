@@ -5,8 +5,10 @@ File: demo.py
 Author: Rock Johnson
 Description: 此文件为案例文件
 """
+import sys
+sys.path.append('../')
 try:
-    from .panicbuying.panic import Panic
+    from panicbuying.panic import Panic
 except:
     from panicbuying.panicbuying.panic import Panic
 
