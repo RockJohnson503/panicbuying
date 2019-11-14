@@ -135,7 +135,8 @@ class Browsers:
         zf = zipfile.ZipFile(file)
         try:
             for z in zf.filelist:
-                if self._driver_name in z.filename:
+                start = z.filename.rfind('/')
+                if self._driver_name in z.filename[0 if start == -1 else start:]:
                     zf.extract(z, self._bag)
                     os.chmod(os.path.join(self._bag, z.filename), stat.S_IRWXU|stat.S_IRWXG|stat.S_IRWXO)
             flag = True
@@ -173,14 +174,13 @@ class Opera(Browsers):
 
     def _delete(self, file):
         os.remove(file)
-        for p in os.listdir(self._bag):
-            ch = os.path.join(self._bag, p)
-            if os.path.isdir(ch):
-                for c in os.listdir(ch):
-                    if self._driver_name in c:
-                        shutil.copy(os.path.join(ch, c), os.path.join(self._bag, c))
-                        break
-                shutil.rmtree(ch)
+        extract = os.path.splitext(file)[0]
+        if not os.path.isdir(extract):
+            return
+        for c in os.listdir(extract):
+            if self._driver_name in c:
+                shutil.copy(os.path.join(extract, c), self._bag)
+        shutil.rmtree(extract)
 
 
 # 火狐浏览器
@@ -197,3 +197,4 @@ class Firefox(Browsers):
 
 if __name__ == '__main__':
     Browser().get('Opera', '2.42.0').get('https://baidu.com')
+    # Browser().get('Google Chrome', '78.0.1').get('https://baidu.com')
