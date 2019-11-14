@@ -12,16 +12,16 @@ import zipfile
 import requests
 import platform
 import urllib.request
+from selenium import webdriver
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup as bs
-from selenium import webdriver
 
 
 class Browser:
     def __init__(self):
         self._browsers = {
             'Google Chrome': Chrome,
-            # 'Opera': Opera,
+            'Opera': Opera,
             # 'Mozilla Firefox': Firefox,
         }
 
@@ -196,4 +196,4 @@ class Firefox(Browsers):
 
 
 if __name__ == '__main__':
-    Browser().get().get('https://baidu.com')
+    Browser().get('Opera', '2.42.0').get('https://baidu.com')
