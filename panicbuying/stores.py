@@ -4,8 +4,8 @@
 File: chrome.py
 Author: Rock Johnson
 """
-import os, time
-from selenium import webdriver
+import time
+from .browsers import Browser
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -14,98 +14,78 @@ from selenium.webdriver.support import expected_conditions as EC
 
 class Stores:
     def __init__(self, **kwargs):
-        self._account = kwargs['account']
-        self._password = kwargs['password']
-        self._goods_name = kwargs['goods_name']
-        self._goods_nth = kwargs['goods_nth']
-        self._addr_nth = kwargs['addr_nth']
+        self._url = kwargs['url']
+        self._addr_nth = kwargs.get('addr_nth') or 1
+        self._browser = Browser().get(kwargs['browser'], kwargs['version'])
 
-        try:
-            os.uname()
-            mark = '/'
-        except:
-            mark = '\\'
-        self._exec_path = os.path.abspath(__file__).replace('stores.py', 'drivers%s%s' % (mark, kwargs['driver']))
-        self._options = webdriver.ChromeOptions()
-        self._options.add_argument('start-maximized')
-
+    # 登录
     def _login(self):
-        # 登录
         pass
 
+    # 选择物品
     def _choice_goods(self):
-        # 选择物品
         pass
 
+    # 开始抢购
     def _start_panic(self):
-        # 开始抢购
         pass
 
     def start(self):
-        self._brower = webdriver.Chrome(self._exec_path, options=self._options)
-        self._brower.get(self._url)
+        self._browser.get(self._url)
         self._login()
-        self._choice_goods()
         self._start_panic()
 
     def close(self):
-        self._brower.quit()
+        self._browser.quit()
 
 
 class Xiaomi(Stores):
     def __init__(self, **kwargs):
         Stores.__init__(self, **kwargs)
-        self._url = 'https://www.mi.com'
+        if not self._url or 'mi.com' not in self._url:
+            raise ValueError('您输入的商品路径不属于小米商城')
 
+    # 登录
     def _login(self):
-        # 登录
-        index_login_btn = wait(self._brower, 10, '#J_siteUserInfo a.link:nth-child(1)')
-        if index_login_btn:
-            index_login_btn.click()  # 点击登录按钮
-
-        agree_modal = wait(self._brower, 5, '.J_siteAgreementDialog')
         time.sleep(1)
-        if agree_modal and agree_modal.is_displayed():
-            primary_btn = self._brower.find_element_by_css_selector('.btn-primary')
-            primary_btn.click() # 点击同意按钮
+        self._browser.execute_script('var q=document.documentElement.scrollTop=0')
+        wait(self._browser, 10, '#J_userInfo a.link:nth-child(1)', '登录').click()
+        wait(self._browser, 5, '#J_agreeModal .btn-primary', '同意按钮').click()
+        wait(self._browser, 5, '#nav-tabs a[data-tab="qr"]', '扫码登录').send_keys(Keys.ENTER)
 
-        # 输入账号
-        account_input = wait(self._brower, 10, '#username')
-        password_input = wait(self._brower, 10, '#pwd')
+        while True:
+            try:
+                wait(self._browser, 10, '#J_userInfo span.user', '登录成功')
+                break
+            except:
+                pass
+        print('登录成功')
 
-        account_input.send_keys(self._account)
-        password_input.send_keys(self._password)
-        password_input.send_keys(Keys.ENTER)
-
-        ok = wait(self._brower, 10, '#J_siteUserInfo span.user')
-        if not ok:
-            self._login()
-
+    # 选择要抢购的商品
     def _choice_goods(self):
-        # 选择要抢购的商品
-        search_input = self._brower.find_element_by_css_selector('#search')
+        search_input = self._browser.find_element_by_css_selector('#search')
         search_input.send_keys(self._goods_name)
         search_input.send_keys(Keys.ENTER)
 
-        goods_item = wait(self._brower, 10, '.goods-list-box .goods-item:nth-child(%d)' % self._goods_nth)
+        goods_item = wait(self._browser, 10, '.goods-list-box .goods-item:nth-child(%d)' % self._goods_nth)
         if goods_item:
             goods_item.click()
 
-        windows = self._brower.window_handles
-        self._brower.switch_to.window(windows[1])
+        windows = self._browser.window_handles
+        self._browser.switch_to.window(windows[1])
 
-        buy_btn = wait(self._brower, 10, '#J_headNav .right .btn-primary')
+        buy_btn = wait(self._browser, 10, '#J_headNav .right .btn-primary')
         if buy_btn:
             buy_btn.click()
-        wait(self._brower, 10, '#J_buyBtnBox li:nth-child(1)')
+        wait(self._browser, 10, '#J_buyBtnBox li:nth-child(1)')
 
+    # 开始抢购
     def _start_panic(self):
-        # 开始抢购
         flag = 0
         while True:
             try:
                 flag = 0
-                buy_btn = self._brower.find_element_by_css_selector('#J_buyBtnBox li:nth-child(1)')
+                buy_btn = self._browser.find_element_by_css_selector('#J_buyBtnBox li:nth-child(1)')
                 flag = 1
                 buy_btn.click()
             except:
@@ -114,30 +94,22 @@ class Xiaomi(Stores):
                 elif flag == 1:
                     print('无法点击按钮')
         print('正在排队, 请等待结果')
-        ok = wait(self._brower, 200, '#J_goodsBox')
-        if ok:
-            shop_btn = wait(self._brower, 10, '.actions.J_actBox a.btn-primary')
-            if shop_btn:
-                shop_btn.click()
-            pay_btn = wait(self._brower, 10, '#J_goCheckout')
-            if pay_btn:
-                pay_btn.click()
-            address = wait(self._brower, 10, '#J_addressList div:nth-child(%d)' % self._addr_nth)
-            if address:
-                address.click()
-            order_btn = wait(self._brower, 10, '#J_checkoutToPay')
-            if order_btn:
-                order_btn.click()
-            print('抢购成功,请尽快付款!')
-        else:
+        try:
+            wait(self._browser, 200, '#J_goodsBox', '')
+        except:
             print('抢购失败!')
+        wait(self._browser, 10, '.actions.J_actBox a.btn-primary', '去购物车结算按钮').click()
+        wait(self._browser, 10, '#J_goCheckout', '去结算按钮').click()
+        wait(self._browser, 10, '#J_addressList > div:nth-child(%d)' % self._addr_nth, '收货地址选项').click()
+        wait(self._browser, 10, '#J_checkoutToPay', '去结算按钮').click()
+        print('抢购成功,请尽快付款!')
 
 
-def wait(driver, time, css):
+def wait(driver, time, css, desc):
     try:
         element = WebDriverWait(driver, time).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, css))
         )
         return element
     except:
-        return False
+        raise SystemError('[%s]元素不存在或选择器未更新,若元素确实存在请联系作者' % desc)

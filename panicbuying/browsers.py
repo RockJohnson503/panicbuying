@@ -20,8 +20,8 @@ from bs4 import BeautifulSoup as bs
 class Browser:
     def __init__(self):
         self._browsers = {
-            'Google Chrome': Chrome,
-            'Opera': Opera,
+            'Chrome': Chrome,
+            # 'Opera': Opera,
             # 'Mozilla Firefox': Firefox,
         }
 
@@ -86,19 +86,24 @@ class Browsers:
         raise NotImplementedError()
 
     def download(self):
+        try: # 如果是64位,则尝试下载64位,没有就下载32位
+            file = self._download(self._get_suffix())
+        except:
+            file = self._download(self._get_suffix('32'))
+        suc = self._extract(file)
+        if suc:
+            self._delete(file)
+
+    # 获取下载文件的后缀
+    def _get_suffix(self, machine=None):
         s = {
             'Windows': 'win',
             'Linux': 'linux',
             'Mac': 'mac',
         }
-        system = s.get(platform.system())
-        try: # 如果是64位,则尝试下载64位,没有就下载32位
-            file = self._download(system + '%s.zip' % platform.machine()[-2:])
-        except:
-            file = self._download(system + '32.zip')
-        suc = self._extract(file)
-        if suc:
-            self._delete(file)
+        machine = machine or platform.machine()[-2:]
+        system = s.get(platform.system()) or 'win'
+        return system + machine + '.zip'
 
     # 获取当前版本的驱动下载路径
     def _version_url(self):
@@ -193,8 +198,3 @@ class Firefox(Browsers):
         options = webdriver.FirefoxOptions()
         options.add_argument('start-maximized')
         return webdriver.Firefox(options=options)
-
-
-if __name__ == '__main__':
-    Browser().get('Opera', '2.42.0').get('https://baidu.com')
-    # Browser().get('Google Chrome', '78.0.1').get('https://baidu.com')

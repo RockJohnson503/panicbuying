@@ -4,13 +4,17 @@
 File: panic.py
 Author: Rock Johnson
 """
-from .stores import *
+from .stores import Xiaomi
 
 
 class Panic:
     def __init__(self, **kwargs):
-        if kwargs['store'] == '小米':
-            self._store = Xiaomi(**kwargs)
+        stores = {
+            '小米': Xiaomi,
+        }
+
+        if stores.get(kwargs['store']):
+            self._store = stores[kwargs['store']](**kwargs)
         else:
             raise KeyError('暂不支持%s商城的抢购' % kwargs['store'])
 
