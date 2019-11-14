@@ -6,7 +6,7 @@ Author: Rock Johnson
 """
 import os
 import sys
-import winreg
+import stat
 import shutil
 import zipfile
 import requests
@@ -25,16 +25,24 @@ class Browser:
             # 'Mozilla Firefox': Firefox,
         }
 
-    def get(self):
-        programs = self._get_program()
-        for k, v in self._browsers.items():
-            if b:=self._find(programs, k):
-                browser = v(b)
-                try:
-                    return browser.get()
-                except:
-                    browser.download()
-                    return browser.get()
+    def get(self, browser=None, version=None):
+        res = None
+        if browser and not version:
+            raise ValueError('使用指定的浏览器必须输入浏览器对应的版本号')
+        if browser and self._browsers.get(browser):
+            res = self._browsers[browser](version)
+        else:
+            programs = self._get_program()
+            for k, v in self._browsers.items():
+                if b:=self._find(programs, k):
+                    res = v(b)
+                    break
+        if res:
+            try:
+                return res.get()
+            except:
+                res.download()
+                return res.get()
         raise SystemError('请先安装以下浏览器:', ', '.join(self._browsers.keys()))
 
     def  _find(self, dt, needle):
@@ -43,6 +51,7 @@ class Browser:
                 return v
 
     def _get_program(self):
+        import winreg
         keys = [winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER]
         sub_key = [r'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',
                    r'SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall']
@@ -77,10 +86,16 @@ class Browsers:
         raise NotImplementedError()
 
     def download(self):
+        s = {
+            'Windows': 'win',
+            'Linux': 'linux',
+            'Mac': 'mac',
+        }
+        system = s.get(platform.system())
         try: # 如果是64位,则尝试下载64位,没有就下载32位
-            file = self._download('win%s.zip' % platform.machine()[-2:])
+            file = self._download(system + '%s.zip' % platform.machine()[-2:])
         except:
-            file = self._download('win32.zip')
+            file = self._download(system + '32.zip')
         suc = self._extract(file)
         if suc:
             self._delete(file)
@@ -122,6 +137,7 @@ class Browsers:
             for z in zf.filelist:
                 if self._driver_name in z.filename:
                     zf.extract(z, self._bag)
+                    os.chmod(os.path.join(self._bag, z.filename), stat.S_IRWXU|stat.S_IRWXG|stat.S_IRWXO)
             flag = True
         except:
             print('解压失败,请自行解压文件:', file)
@@ -180,4 +196,4 @@ class Firefox(Browsers):
 
 
 if __name__ == '__main__':
-    Browser().get()
+    Browser().get().get('https://baidu.com')
