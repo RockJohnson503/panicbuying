@@ -4,7 +4,6 @@
 File: chrome.py
 Author: Rock Johnson
 """
-import time
 from .browsers import Browser
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
