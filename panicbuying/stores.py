@@ -4,11 +4,16 @@
 File: chrome.py
 Author: Rock Johnson
 """
-from .browsers import Browser
+import os
+import time
+from urllib import request
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
+from .browsers import Browser
 
 
 class Stores:
@@ -40,7 +45,7 @@ class Stores:
 
 class Xiaomi(Stores):
     def __init__(self, **kwargs):
-        Stores.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         if not self._url or 'mi.com' not in self._url:
             raise ValueError('您输入的商品路径不属于小米商城')
 
@@ -101,6 +106,45 @@ class Xiaomi(Stores):
         wait(self._browser, 10, '#J_addressList > div:nth-child(%d)' % self._addr_nth, '收货地址选项').click()
         wait(self._browser, 10, '#J_checkoutToPay', '去结算按钮').click()
         print('抢购成功,请尽快付款!')
+
+
+class WenQuan(Stores):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._path = kwargs['path']
+        self._book = kwargs['book']
+        self._account = kwargs['account']
+        self._password = kwargs['password']
+
+    def _login(self):
+        wait(self._browser, 5, '.head-box .head-logon', '登录').click()
+        time.sleep(1)
+        wait(self._browser, 5, '#mobilelogin-form-link', '账号密码登录按钮').click()
+        time.sleep(1)
+        wait(self._browser, 5, '#account', '账号输入框').send_keys(self._account)
+        wait(self._browser, 5, '#password', '账号输入框').send_keys(self._password)
+        wait(self._browser, 5, '#mobilelogin-form > div:nth-child(3) > div > div > input', '登录按钮').click()
+
+        while True:
+            try:
+                wait(self._browser, 10, '.head-logon span', '登录成功')
+                break
+            except:
+                pass
+
+    def _download(self):
+        for i in range(1, 405):
+            page = self._browser.find_element_by_css_selector('#pagebox .page-img-box[index="%d"]' % i)
+            self._browser.execute_script('arguments[0].scrollIntoView();', page)
+            time.sleep(0.5)
+            img = page.find_element_by_css_selector('img.page-img').get_attribute('src')
+            request.urlretrieve(img, os.path.join(self._path, self._book + '-%d.png' % i))
+            print('第%d页下载完成' % i)
+
+    def start(self):
+        self._browser.get(self._url)
+        self._login()
+        self._download()
 
 
 def wait(driver, time, css, desc):

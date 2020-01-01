@@ -4,13 +4,14 @@
 File: panic.py
 Author: Rock Johnson
 """
-from .stores import Xiaomi
+from .stores import Xiaomi, WenQuan
 
 
 class Panic:
     def __init__(self, **kwargs):
         stores = {
             '小米': Xiaomi,
+            '文泉': WenQuan,
         }
 
         if stores.get(kwargs['store']):
