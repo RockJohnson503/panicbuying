@@ -18,9 +18,13 @@ from .browsers import Browser
 
 class Stores:
     def __init__(self, **kwargs):
-        self._url = kwargs['url']
-        self._addr_nth = kwargs.get('addr_nth') or 1
-        self._browser = Browser().get(kwargs.get('browser'), kwargs.get('version'))
+        self._url = kwargs.get('url')
+        self._addr_nth = kwargs.get('addr_nth', 1)
+        self._quit = kwargs.get('quit', False)
+        self._browser = Browser().get(
+            kwargs.get('browser'), kwargs.get('version'),
+            hidden=kwargs.get('hidden')
+        )
 
     # 登录
     def _login(self):
@@ -38,6 +42,8 @@ class Stores:
         self._browser.get(self._url)
         self._login()
         self._start_panic()
+        if self._quit:
+            self.close()
 
     def close(self):
         self._browser.quit()
@@ -110,20 +116,23 @@ class Xiaomi(Stores):
 
 class WenQuan(Stores):
     def __init__(self, **kwargs):
+        kwargs['hidden'] = kwargs.get('hidden', True)
+        kwargs['quit'] = kwargs.get('quit', True)
         super().__init__(**kwargs)
         self._path = kwargs['path']
-        self._book = kwargs['book']
         self._account = kwargs['account']
         self._password = kwargs['password']
+        self._book = list(kwargs['books'].keys())
+        self._url = list(kwargs['books'].values())
 
     def _login(self):
-        wait(self._browser, 5, '.head-box .head-logon', '登录').click()
+        wait(self._browser, 5, '.head-box .head-logon', '登录', 'click')
         time.sleep(1)
-        wait(self._browser, 5, '#mobilelogin-form-link', '账号密码登录按钮').click()
+        wait(self._browser, 5, '#mobilelogin-form-link', '账号密码登录按钮', 'click')
         time.sleep(1)
         wait(self._browser, 5, '#account', '账号输入框').send_keys(self._account)
         wait(self._browser, 5, '#password', '账号输入框').send_keys(self._password)
-        wait(self._browser, 5, '#mobilelogin-form > div:nth-child(3) > div > div > input', '登录按钮').click()
+        wait(self._browser, 5, '#mobilelogin-form > div:nth-child(3) > div > div > input', '登录按钮', 'click')
 
         while True:
             try:
@@ -131,27 +140,37 @@ class WenQuan(Stores):
                 break
             except:
                 pass
+        print("登录成功")
 
-    def _download(self):
-        for i in range(1, 405):
-            page = self._browser.find_element_by_css_selector('#pagebox .page-img-box[index="%d"]' % i)
+    def _download(self, idx=0):
+        book = self._book[idx]
+        wait(self._browser, 5, '#pagebox .page-img-box[index="3"]', '书籍')
+        pages = self._browser.find_elements_by_css_selector('#pagebox .page-img-box[index]')
+        for i, page in enumerate(pages):
             self._browser.execute_script('arguments[0].scrollIntoView();', page)
             time.sleep(0.5)
             img = page.find_element_by_css_selector('img.page-img').get_attribute('src')
-            request.urlretrieve(img, os.path.join(self._path, self._book + '-%d.png' % i))
-            print('第%d页下载完成' % i)
+            request.urlretrieve(img, os.path.join(self._path, f'{book}-{i}.png'))
+            print(f'《{book}》 第{i}页下载完成')
+        if len(self._book) - idx > 1:
+            self._browser.get(self._url[idx + 1])
+            self._download(idx + 1)
 
     def start(self):
-        self._browser.get(self._url)
+        self._browser.get(self._url[0])
         self._login()
         self._download()
+        if self._quit:
+            self.close()
 
 
-def wait(driver, time, css, desc):
+def wait(driver, time, css, desc, operate='wait'):
     try:
         element = WebDriverWait(driver, time).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, css))
         )
+        if operate == 'click':
+            driver.execute_script("arguments[0].click();", element)
         return element
     except:
-        raise SystemError('[%s]元素不存在或选择器未更新,若元素确实存在请联系作者' % desc)
+        raise SystemError(f'[{desc}]元素不存在或选择器未更新,若元素确实存在请联系作者')
