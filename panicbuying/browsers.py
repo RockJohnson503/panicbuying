@@ -9,11 +9,12 @@ import sys
 import stat
 import shutil
 import zipfile
-import requests
 import platform
 import urllib.request
-from selenium import webdriver
 from urllib.parse import urljoin
+
+import requests
+from selenium import webdriver
 from bs4 import BeautifulSoup as bs
 
 
@@ -25,17 +26,17 @@ class Browser:
             # 'Mozilla Firefox': Firefox,
         }
 
-    def get(self, browser=None, version=None):
+    def get(self, browser=None, version=None, **kwargs):
         res = None
         if browser and not version:
             raise ValueError('使用指定的浏览器必须输入浏览器对应的版本号')
         if browser and self._browsers.get(browser):
-            res = self._browsers[browser](version)
+            res = self._browsers[browser](version, **kwargs)
         else:
             programs = self._get_program()
             for k, v in self._browsers.items():
-                if b:=self._find(programs, k):
-                    res = v(b)
+                if b := self._find(programs, k):
+                    res = v(b, **kwargs)
                     break
         if res:
             try:
@@ -45,7 +46,7 @@ class Browser:
                 return res.get()
         raise SystemError('请先安装以下浏览器:', ', '.join(self._browsers.keys()))
 
-    def  _find(self, dt, needle):
+    def _find(self, dt, needle):
         for k, v in dt.items():
             if needle in k:
                 return v
@@ -77,16 +78,17 @@ class Browser:
 class Browsers:
     _driver_name = 0
 
-    def __init__(self, version):
-        self._url = 'http://npm.taobao.org/mirrors/%s/' % self._driver_name
+    def __init__(self, version, **kwargs):
+        self._url = f'http://npm.taobao.org/mirrors/{self._driver_name}/'
         self._version = version
         self._bag = os.path.dirname(sys.executable)
+        self._hidden = kwargs.get('hidden', False)
 
     def get(self):
         raise NotImplementedError()
 
     def download(self):
-        try: # 如果是64位,则尝试下载64位,没有就下载32位
+        try:  # 如果是64位,则尝试下载64位,没有就下载32位
             file = self._download(self._get_suffix())
         except:
             file = self._download(self._get_suffix('32'))
@@ -96,14 +98,13 @@ class Browsers:
 
     # 获取下载文件的后缀
     def _get_suffix(self, machine=None):
-        s = {
+        system = {
             'Windows': 'win',
             'Linux': 'linux',
             'Mac': 'mac',
-        }
+        }.get(platform.system(), 'win')
         machine = machine or platform.machine()[-2:]
-        system = s.get(platform.system()) or 'win'
-        return system + machine + '.zip'
+        return f'{system}{machine}.zip'
 
     # 获取当前版本的驱动下载路径
     def _version_url(self):
@@ -143,7 +144,7 @@ class Browsers:
                 start = z.filename.rfind('/')
                 if self._driver_name in z.filename[0 if start == -1 else start:]:
                     zf.extract(z, self._bag)
-                    os.chmod(os.path.join(self._bag, z.filename), stat.S_IRWXU|stat.S_IRWXG|stat.S_IRWXO)
+                    os.chmod(os.path.join(self._bag, z.filename), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
             flag = True
         except:
             print('解压失败,请自行解压文件:', file)
@@ -158,21 +159,23 @@ class Browsers:
 
 # 谷歌浏览器
 class Chrome(Browsers):
-    def __init__(self, version):
+    def __init__(self, version, **kwargs):
         self._driver_name = 'chromedriver'
-        super().__init__(version)
+        super().__init__(version, **kwargs)
 
     def get(self):
         options = webdriver.ChromeOptions()
         options.add_argument('start-maximized')
+        if self._hidden:
+            options.add_argument('--headless')
         return webdriver.Chrome(options=options)
 
 
 # 欧朋浏览器
 class Opera(Browsers):
-    def __init__(self, version):
+    def __init__(self, version, **kwargs):
         self._driver_name = 'operadriver'
-        super().__init__(version)
+        super().__init__(version, **kwargs)
 
     def get(self):
         return webdriver.Opera()
@@ -190,9 +193,9 @@ class Opera(Browsers):
 
 # 火狐浏览器
 class Firefox(Browsers):
-    def __init__(self, version):
+    def __init__(self, version, **kwargs):
         self._driver_name = 'geckodriver'
-        super().__init__(version)
+        super().__init__(version, **kwargs)
 
     def get(self):
         options = webdriver.FirefoxOptions()
